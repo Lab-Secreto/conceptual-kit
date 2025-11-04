@@ -69,6 +69,8 @@ include = [
     "/conceptual_kit",
     "/templates",
     "/examples",
+    "/.claude",
+    "/.github",
     "/README.md",
     "/LICENSE",
     "/conceptual-modeling.md",

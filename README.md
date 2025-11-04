@@ -18,7 +18,7 @@ The Conceptual Model Kit helps you document how users think about and interact w
 
 ### Installation
 
-Install the Conceptual Kit CLI tool using `uv` or `pip`:
+Install the Conceptual Kit CLI tool using `uv` (recommended):
 
 ```bash
 # Using uv (recommended)
@@ -37,69 +37,89 @@ conceptual init my-project
 # Initialize with specific AI assistant
 conceptual init my-project --ai claude
 
-# Initialize with Cursor support
-conceptual init my-project --ai cursor-agent
-
-# Initialize with Windsurf support
-conceptual init my-project --ai windsurf
-
-# Initialize with Amp support
-conceptual init my-project --ai amp
-
 # Initialize in current directory
-conceptual init . --ai copilot
+conceptual init . --ai claude
 # or use the --here flag
-conceptual init --here --ai copilot
+conceptual init --here --ai claude
 
 # Force merge into current (non-empty) directory without confirmation
-conceptual init . --force --ai copilot
+conceptual init . --force --ai claude
 
 # Skip git initialization
-conceptual init my-project --ai gemini --no-git
-
-# Enable debug output for troubleshooting
-conceptual init my-project --ai claude --debug
+conceptual init my-project --no-git
 
 # Check system requirements
 conceptual check
 ```
 
-### Alternative: Manual Setup
+### What Gets Installed
 
-You can also clone this repository directly and use it with **Claude Code** or **GitHub Copilot**:
+When you run `conceptual init`, the following structure is created:
 
-1. Clone or copy this repository into your project
-2. The custom commands in `.github/copilot-instructions.md` will be automatically recognized
+```
+my-project/
+├── .claude/
+│   ├── commands/              # 7 slash commands for Claude Code
+│   │   ├── concept-init.md
+│   │   ├── concept-add-object.md
+│   │   ├── concept-add-relationship.md
+│   │   ├── concept-add-action.md
+│   │   ├── concept-review.md
+│   │   ├── concept-generate.md
+│   │   └── concept-status.md
+│   └── steering/
+│       └── conceptual-modeling-guide.md
+├── .github/
+│   └── copilot-instructions.md  # For GitHub Copilot compatibility
+├── docs/                         # Your conceptual models go here
+├── examples/                     # Reference models
+├── templates/                    # Document templates
+└── README.md                     # Getting started guide
+```
 
 ### Your First Conceptual Model
 
+After initialization, open your project in Claude Code and use the slash commands:
+
 ```bash
-# 1. Initialize a new model
-claude-code "concept init MyApp"
+# 1. Navigate to your project
+cd my-project
 
-# 2. Add your core objects
-claude-code "concept add-object User"
-claude-code "concept add-object Post"
-claude-code "concept add-object Comment"
+# 2. Open Claude Code
+claude
 
-# 3. Map relationships
-claude-code "concept add-relationship User Post"
-claude-code "concept add-relationship Post Comment"
+# 3. Inside Claude Code, use slash commands:
 
-# 4. Add user workflows
-claude-code "concept add-action create-post"
-claude-code "concept add-action add-comment"
+# Initialize a new model
+/concept.init MyApp
 
-# 5. Review completeness
-claude-code "concept review"
+# Add your core objects
+/concept.add-object User
+/concept.add-object Post
+/concept.add-object Comment
 
-# 6. Generate final document
-claude-code "concept generate"
+# Map relationships
+/concept.add-relationship User Post
+/concept.add-relationship Post Comment
+
+# Add user workflows
+/concept.add-action create-post
+/concept.add-action add-comment
+
+# Review completeness
+/concept.review
+
+# Generate final document
+/concept.generate
 ```
 
-## Available Commands
+**Important:** The commands are **slash commands** (e.g., `/concept.init`) that you use **inside Claude Code**, not CLI commands.
 
-### `concept init <app-name>`
+## Available Slash Commands
+
+All commands below are **slash commands** to use inside Claude Code after running `conceptual init`.
+
+### `/concept.init <app-name>`
 
 Start a new conceptual model. You'll be guided through:
 - Application purpose
@@ -107,15 +127,15 @@ Start a new conceptual model. You'll be guided through:
 - Initial objects
 
 **Example:**
-```bash
-claude-code "concept init RecipeApp"
+```
+/concept.init RecipeApp
 ```
 
 Creates: `docs/conceptual-model-recipe-app.md`
 
 ---
 
-### `concept add-object <object-name>`
+### `/concept.add-object <object-name>`
 
 Add a new object to your model. Define:
 - What users think it is (mental model)
@@ -124,13 +144,13 @@ Add a new object to your model. Define:
 - Object states
 
 **Example:**
-```bash
-claude-code "concept add-object Recipe"
+```
+/concept.add-object Recipe
 ```
 
 ---
 
-### `concept add-relationship <from> <to>`
+### `/concept.add-relationship <from> <to>`
 
 Map relationships between objects:
 - Type (1:1, 1:n, n:n)
@@ -138,13 +158,13 @@ Map relationships between objects:
 - Real-world examples
 
 **Example:**
-```bash
-claude-code "concept add-relationship User Recipe"
+```
+/concept.add-relationship User Recipe
 ```
 
 ---
 
-### `concept add-action <action-name>`
+### `/concept.add-action <action-name>`
 
 Document user workflows:
 - User's mental model of the action
@@ -152,13 +172,13 @@ Document user workflows:
 - Objects involved
 
 **Example:**
-```bash
-claude-code "concept add-action create-recipe"
+```
+/concept.add-action create-recipe
 ```
 
 ---
 
-### `concept review`
+### `/concept.review`
 
 Get a comprehensive review of your model:
 - Completeness checklist
@@ -167,8 +187,8 @@ Get a comprehensive review of your model:
 - Next recommended steps
 
 **Example:**
-```bash
-claude-code "concept review"
+```
+/concept.review
 ```
 
 **Output:**
@@ -191,7 +211,7 @@ claude-code "concept review"
 
 ---
 
-### `concept generate`
+### `/concept.generate`
 
 Create final formatted document:
 - Complete markdown file
@@ -200,8 +220,8 @@ Create final formatted document:
 - Formatted diagrams
 
 **Example:**
-```bash
-claude-code "concept generate"
+```
+/concept.generate
 ```
 
 Creates:
@@ -210,7 +230,7 @@ Creates:
 
 ---
 
-### `concept status`
+### `/concept.status`
 
 Quick overview of current model state:
 - Object count
@@ -220,8 +240,8 @@ Quick overview of current model state:
 - Next suggested step
 
 **Example:**
-```bash
-claude-code "concept status"
+```
+/concept.status
 ```
 
 ## Examples

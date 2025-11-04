@@ -60,9 +60,10 @@ Thumbs.db
 *.pdf
 *-final.md
 
-# Claude Code
-.claude/
+# Claude Code settings (but keep commands)
+.claude/settings.local.json
 
 # Temporary files
 *.tmp
 *.bak
+source-knowledge/conceptual-models-core-to-good-design.txt

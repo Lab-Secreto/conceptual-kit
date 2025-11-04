@@ -154,7 +154,25 @@ def init(
     docs_dir.mkdir(exist_ok=True)
     console.print(f"✓ Created docs directory")
 
-    # Create .github directory and copilot instructions
+    # Copy .claude directory (Claude Code slash commands)
+    claude_src = Path(__file__).parent.parent / ".claude"
+    claude_dst = target_dir / ".claude"
+
+    if claude_src.exists():
+        if claude_dst.exists():
+            shutil.rmtree(claude_dst)
+        shutil.copytree(claude_src, claude_dst)
+        console.print(f"✓ Installed Claude Code slash commands (.claude/)")
+
+        # Count commands
+        commands_dir = claude_dst / "commands"
+        if commands_dir.exists():
+            command_files = list(commands_dir.glob("*.md"))
+            console.print(f"  → {len(command_files)} slash commands available")
+    else:
+        console.print("[yellow]Warning: .claude directory not found[/yellow]")
+
+    # Create .github directory and copilot instructions (for GitHub Copilot compatibility)
     github_dir = target_dir / ".github"
     github_dir.mkdir(exist_ok=True)
 
@@ -162,11 +180,12 @@ def init(
     source_instructions = Path(__file__).parent.parent / ".github" / "copilot-instructions.md"
     if source_instructions.exists():
         shutil.copy(source_instructions, github_dir / "copilot-instructions.md")
-        console.print(f"✓ Created AI assistant configuration for {ai}")
+        console.print(f"✓ Created GitHub Copilot configuration (.github/)")
 
-    # Create conceptual-modeling.md
+    # Copy conceptual-modeling.md to steering directory
     conceptual_modeling_src = Path(__file__).parent.parent / "conceptual-modeling.md"
     if conceptual_modeling_src.exists():
+        # Also copy to root for easy access
         shutil.copy(conceptual_modeling_src, target_dir / "conceptual-modeling.md")
         console.print(f"✓ Copied conceptual modeling guide")
 
@@ -214,41 +233,77 @@ Conceptual Model Kit Project
 
 ## Getting Started
 
-### Create your first conceptual model
+This project has been configured with **Claude Code slash commands** for creating conceptual models.
+
+### Available Slash Commands
+
+When using Claude Code in this project, you have access to these commands:
+
+- `/concept.init <name>` - Start a new conceptual model
+- `/concept.add-object <name>` - Add an object to your model
+- `/concept.add-relationship <from> <to>` - Map object relationships
+- `/concept.add-action <name>` - Document user workflows
+- `/concept.review` - Get comprehensive feedback on your model
+- `/concept.generate` - Create final formatted document
+- `/concept.status` - Quick model overview
+
+### Create Your First Conceptual Model
 
 ```bash
-# Initialize a model
-{ai if ai == 'claude' else 'your-ai'} "concept init {project_name}"
+# 1. Open Claude Code in this directory
+claude
 
-# Add objects
-{ai if ai == 'claude' else 'your-ai'} "concept add-object User"
-{ai if ai == 'claude' else 'your-ai'} "concept add-object Post"
+# 2. Inside Claude Code, use slash commands:
+/concept.init {project_name}
 
-# Map relationships
-{ai if ai == 'claude' else 'your-ai'} "concept add-relationship User Post"
+# 3. Add your core objects
+/concept.add-object User
+/concept.add-object Post
+/concept.add-object Comment
 
-# Review your model
-{ai if ai == 'claude' else 'your-ai'} "concept review"
+# 4. Map relationships
+/concept.add-relationship User Post
+/concept.add-relationship Post Comment
 
-# Generate final document
-{ai if ai == 'claude' else 'your-ai'} "concept generate"
+# 5. Add user workflows
+/concept.add-action create-post
+/concept.add-action add-comment
+
+# 6. Review your model
+/concept.review
+
+# 7. Generate final document
+/concept.generate
 ```
 
 ## Documentation
 
-- See `conceptual-modeling.md` for the philosophy and principles
-- Check `examples/` for reference models
+- See `.claude/steering/conceptual-modeling-guide.md` for the philosophy and principles
+- Check `examples/` for reference models at different complexity levels
 - Review `templates/` for document structure
+- See `.claude/commands/` for detailed command documentation
 
-## Available Commands
+## Command Details
 
-- `concept init <name>` - Start a new conceptual model
-- `concept add-object <name>` - Add an object to your model
-- `concept add-relationship <from> <to>` - Map object relationships
-- `concept add-action <name>` - Document user workflows
-- `concept review` - Get feedback on your model
-- `concept generate` - Create final formatted document
-- `concept status` - Quick model overview
+Each slash command in `.claude/commands/` provides:
+- Detailed workflow instructions
+- Interactive forms for gathering information
+- Best practices and examples
+- Error handling guidance
+
+## Project Structure
+
+```
+{project_name}/
+├── .claude/
+│   ├── commands/          # Slash commands for Claude Code
+│   └── steering/          # Conceptual modeling guide
+├── docs/                  # Your conceptual models go here
+├── examples/              # Reference models
+│   ├── todo-app/         # Simple example
+│   ├── e-commerce/       # Medium complexity
+│   └── google-calendar/  # Complex example
+└── templates/            # Document templates
 
 ## Resources
 
