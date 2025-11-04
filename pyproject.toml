@@ -64,6 +64,13 @@ Issues = "https://github.com/Lab-Secreto/conceptual-kit/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["conceptual_kit"]
 
+[tool.hatch.build.targets.wheel.shared-data]
+".claude" = "share/conceptual_kit/.claude"
+"templates" = "share/conceptual_kit/templates"
+"examples" = "share/conceptual_kit/examples"
+".github" = "share/conceptual_kit/.github"
+"conceptual-modeling.md" = "share/conceptual_kit/conceptual-modeling.md"
+
 [tool.hatch.build.targets.sdist]
 include = [
     "/conceptual_kit",

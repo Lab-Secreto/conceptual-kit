@@ -18,28 +18,89 @@ from rich import box
 console = Console()
 
 
+def get_data_path(subdir: str, debug: bool = False) -> Path:
+    """Get the path to a data directory (templates, examples, .claude, etc)."""
+    # Try multiple locations in order of preference
+    import sys
+
+    # 1. Development mode: relative to package
+    package_dir = Path(__file__).parent.parent
+    dev_path = package_dir / subdir
+    if debug:
+        console.print(f"[dim]Checking dev path: {dev_path} (exists: {dev_path.exists()})[/dim]")
+    if dev_path.exists():
+        return dev_path
+
+    # 2. Installed via wheel: in share directory
+    if sys.prefix != sys.base_prefix:  # In a virtual environment
+        share_path = Path(sys.prefix) / "share" / "conceptual_kit" / subdir
+        if debug:
+            console.print(f"[dim]Checking venv share path: {share_path} (exists: {share_path.exists()})[/dim]")
+        if share_path.exists():
+            return share_path
+
+    # 3. Global installation
+    share_path = Path(sys.prefix) / "share" / "conceptual_kit" / subdir
+    if debug:
+        console.print(f"[dim]Checking global share path: {share_path} (exists: {share_path.exists()})[/dim]")
+    if share_path.exists():
+        return share_path
+
+    # 4. Fallback to return the dev path even if it doesn't exist (for error messages)
+    if debug:
+        console.print(f"[dim]Fallback to: {dev_path}[/dim]")
+    return dev_path
+
+
 def get_templates_path() -> Path:
     """Get the path to the templates directory."""
-    # When installed, templates are packaged with the module
-    package_dir = Path(__file__).parent.parent
-    templates_dir = package_dir / "templates"
-
-    if templates_dir.exists():
-        return templates_dir
-
-    # Fallback to development location
-    return Path.cwd() / "templates"
+    return get_data_path("templates")
 
 
 def get_examples_path() -> Path:
     """Get the path to the examples directory."""
+    return get_data_path("examples")
+
+
+def get_claude_path() -> Path:
+    """Get the path to the .claude directory."""
+    return get_data_path(".claude")
+
+
+def get_github_path() -> Path:
+    """Get the path to the .github directory."""
+    return get_data_path(".github")
+
+
+def get_conceptual_modeling_path(debug: bool = False) -> Path:
+    """Get the path to the conceptual-modeling.md file."""
+    # Try multiple locations
     package_dir = Path(__file__).parent.parent
-    examples_dir = package_dir / "examples"
+    import sys
 
-    if examples_dir.exists():
-        return examples_dir
+    # 1. Development mode
+    dev_path = package_dir / "conceptual-modeling.md"
+    if debug:
+        console.print(f"[dim]Checking conceptual-modeling.md at: {dev_path} (exists: {dev_path.exists()})[/dim]")
+    if dev_path.exists():
+        return dev_path
 
-    return Path.cwd() / "examples"
+    # 2. Installed via wheel
+    if sys.prefix != sys.base_prefix:
+        share_path = Path(sys.prefix) / "share" / "conceptual_kit" / "conceptual-modeling.md"
+        if debug:
+            console.print(f"[dim]Checking venv share path: {share_path} (exists: {share_path.exists()})[/dim]")
+        if share_path.exists():
+            return share_path
+
+    # 3. Global installation
+    share_path = Path(sys.prefix) / "share" / "conceptual_kit" / "conceptual-modeling.md"
+    if debug:
+        console.print(f"[dim]Checking global share path: {share_path} (exists: {share_path.exists()})[/dim]")
+    if share_path.exists():
+        return share_path
+
+    return dev_path
 
 
 @click.group()
@@ -126,7 +187,7 @@ def init(
     ))
 
     # Copy templates
-    templates_src = get_templates_path()
+    templates_src = get_data_path("templates", debug)
     templates_dst = target_dir / "templates"
 
     if templates_src.exists():
@@ -136,9 +197,11 @@ def init(
         console.print(f"✓ Copied templates to {templates_dst}")
     else:
         console.print("[yellow]Warning: Templates directory not found[/yellow]")
+        if debug:
+            console.print(f"[dim]Searched at: {templates_src}[/dim]")
 
     # Copy examples
-    examples_src = get_examples_path()
+    examples_src = get_data_path("examples", debug)
     examples_dst = target_dir / "examples"
 
     if examples_src.exists():
@@ -148,6 +211,8 @@ def init(
         console.print(f"✓ Copied examples to {examples_dst}")
     else:
         console.print("[yellow]Warning: Examples directory not found[/yellow]")
+        if debug:
+            console.print(f"[dim]Searched at: {examples_src}[/dim]")
 
     # Create docs directory
     docs_dir = target_dir / "docs"
@@ -155,7 +220,7 @@ def init(
     console.print(f"✓ Created docs directory")
 
     # Copy .claude directory (Claude Code slash commands)
-    claude_src = Path(__file__).parent.parent / ".claude"
+    claude_src = get_data_path(".claude", debug)
     claude_dst = target_dir / ".claude"
 
     if claude_src.exists():
@@ -171,23 +236,31 @@ def init(
             console.print(f"  → {len(command_files)} slash commands available")
     else:
         console.print("[yellow]Warning: .claude directory not found[/yellow]")
+        if debug:
+            console.print(f"[dim]Searched at: {claude_src}[/dim]")
 
     # Create .github directory and copilot instructions (for GitHub Copilot compatibility)
-    github_dir = target_dir / ".github"
-    github_dir.mkdir(exist_ok=True)
+    github_src = get_data_path(".github", debug)
+    github_dst = target_dir / ".github"
+    github_dst.mkdir(exist_ok=True)
 
     # Copy copilot instructions from source
-    source_instructions = Path(__file__).parent.parent / ".github" / "copilot-instructions.md"
-    if source_instructions.exists():
-        shutil.copy(source_instructions, github_dir / "copilot-instructions.md")
+    copilot_instructions = github_src / "copilot-instructions.md"
+    if copilot_instructions.exists():
+        shutil.copy(copilot_instructions, github_dst / "copilot-instructions.md")
         console.print(f"✓ Created GitHub Copilot configuration (.github/)")
+    else:
+        if debug:
+            console.print(f"[dim]Copilot instructions not found at: {copilot_instructions}[/dim]")
 
-    # Copy conceptual-modeling.md to steering directory
-    conceptual_modeling_src = Path(__file__).parent.parent / "conceptual-modeling.md"
+    # Copy conceptual-modeling.md to project root
+    conceptual_modeling_src = get_conceptual_modeling_path(debug)
     if conceptual_modeling_src.exists():
-        # Also copy to root for easy access
         shutil.copy(conceptual_modeling_src, target_dir / "conceptual-modeling.md")
         console.print(f"✓ Copied conceptual modeling guide")
+    else:
+        if debug:
+            console.print(f"[dim]Conceptual modeling guide not found at: {conceptual_modeling_src}[/dim]")
 
     # Initialize git if requested
     if not no_git:
@@ -383,6 +456,15 @@ def check() -> None:
         "Examples",
         "✓" if examples_ok else "✗",
         f"Found at {examples_path}" if examples_ok else "Not found"
+    )
+
+    # Check .claude directory availability
+    claude_path = get_claude_path()
+    claude_ok = claude_path.exists()
+    table.add_row(
+        "Claude Commands",
+        "✓" if claude_ok else "✗",
+        f"Found at {claude_path}" if claude_ok else "Not found"
     )
 
     console.print(table)
