@@ -29,55 +29,216 @@ Check if the object is already defined in the "Object Model" section:
 - If exists: Inform user and ask if they want to update it
 - If not: Proceed with creation
 
-### 3. Gather Object Definition
+### 3. Gather Object Definition with AskUserQuestion
+
+**IMPORTANT:** You MUST use the `AskUserQuestion` tool. Do NOT skip this step.
 
 Use AskUserQuestion for structured input:
 
-**Question 1: Mental Model Category**
-- Header: "Mental Model"
-- Question: "What do users think this object IS?"
-- Options:
-  - Container (Holds other things - e.g., Folder, Cart, Playlist)
-  - Item (A single thing - e.g., File, Product, Song)
-  - Action (Something that happens - e.g., Event, Task, Reminder)
-  - Space (A place or area - e.g., Dashboard, Feed, Timeline)
-  - Person (User or entity - e.g., Profile, Contact, Team)
-  - Collection (Group of items - e.g., Library, Album, List)
+```javascript
+AskUserQuestion({
+  questions: [
+    {
+      question: "What category best describes this object from a user's perspective?",
+      header: "Category",
+      multiSelect: false,
+      options: [
+        {
+          label: "Container",
+          description: "Holds other things (Folder, Cart, Playlist, Album)"
+        },
+        {
+          label: "Item",
+          description: "A single thing (File, Product, Song, Recipe)"
+        },
+        {
+          label: "Action/Event",
+          description: "Something that happens (Task, Meeting, Reminder)"
+        },
+        {
+          label: "Space",
+          description: "A place or area (Dashboard, Feed, Timeline)"
+        }
+      ]
+    },
+    {
+      question: "What visibility level does this object have?",
+      header: "Visibility",
+      multiSelect: false,
+      options: [
+        {
+          label: "Always visible",
+          description: "Users see it all the time (like a dashboard widget)"
+        },
+        {
+          label: "On-demand",
+          description: "Users navigate to see it (like viewing a document)"
+        },
+        {
+          label: "Background",
+          description: "Hidden but affects the experience (like settings)"
+        }
+      ]
+    }
+  ]
+})
+```
 
-Then gather via text input:
-- **Mental model description**: "In user's words, what is this object?" (1-2 sentences)
-- **Visible attributes**: What can users see? (comma-separated: title, date, status, etc.)
-- **User actions**: What can users do with this object? (comma-separated: create, edit, delete, share, etc.)
-- **Possible states**: Does it have different states? (optional, comma-separated: draft, published, archived, etc.)
+### 4. Deep Dive Conversation
 
-### 4. Create Object Card
+After the form, have a conversation to understand deeply:
 
-Use the template from `templates/components/object-card.md` to create:
+**Ask these specific questions:**
+
+1. **"In the user's own words, what is a <ObjectName>?"**
+   - Listen for natural language, not technical terms
+   - Example: "A recipe is instructions for making something yummy"
+   - NOT: "A recipe is a data structure with fields"
+
+2. **"Can you describe a specific example of this object?"**
+   - Get concrete details
+   - Example: "My grandma's chocolate chip cookie recipe"
+   - Use these details in the definition
+
+3. **"What information about this object do users care about?"**
+   - These become the visible attributes
+   - Focus on what users SEE, not database fields
+   - Example: "They want to know: who made it, how long it takes, difficulty level"
+
+4. **"Walk me through what users can DO with this object"**
+   - Get the complete list of actions
+   - Ask for the sequence: "What's the first thing? Then what?"
+   - Example: "First they create it, then add ingredients, then they can share it or print it"
+
+5. **"Does this object change over time? What states does it have?"**
+   - Only ask if relevant
+   - Example: "A recipe can be 'draft' when they're writing it, then 'published' when they share it"
+
+**Conversational approach:**
+```
+Claude: "In the user's own words, what is a Recipe?"
+User: "It's like a set of instructions for making food"
+
+Claude: "Perfect! Can you give me a specific example? Maybe one you use?"
+User: "Sure, like my mom's lasagna recipe - it has the ingredients list and step-by-step instructions"
+
+Claude: "Great! So when users look at a recipe, what information matters to them?"
+User: "The title, how many servings, cooking time, difficulty level, and of course the ingredients and steps"
+
+Claude: "And what can users do with a recipe once they have it?"
+User: "They can save it, edit it, add notes, share with family, or print it out"
+
+Claude: "Does a recipe have different states? Like draft vs published?"
+User: "Yes! Sometimes I'm still working on a recipe, and sometimes it's ready to share"
+```
+
+### 5. Synthesize and Confirm
+
+Before creating the object card, show a summary:
+
+```
+📋 <ObjectName> Definition
+
+**User's description:** "<what they said>"
+
+**Category:** <Container/Item/Action/Space>
+
+**Concrete example:** <the specific example they gave>
+
+**What users see:**
+- <attribute1>
+- <attribute2>
+- <attribute3>
+
+**What users can do:**
+1. <action1>
+2. <action2>
+3. <action3>
+
+**States:** <if applicable>
+- <state1> → <state2> → <state3>
+
+**Real-world comparison:** "<metaphor or comparison>"
+```
+
+Ask: **"Does this capture the essence of <ObjectName>? Anything to add or clarify?"**
+
+Wait for confirmation.
+
+### 6. Create Rich Object Card
+
+Use the template from `templates/components/object-card.md` to create a DETAILED card:
 
 ```markdown
 ### <ObjectName>
 
 **What users think it is:**
-"<mental-model-description>"
+"<mental-model-description in user's exact words>"
 
 **Mental model category:** <category>
 
-**Visible attributes:**
-- <attribute1>
-- <attribute2>
-- <attribute3>
+**Concrete example:**
+<The specific example user provided - e.g., "Mom's lasagna recipe with handwritten notes">
 
-**Actions users can perform:**
-- <action1> - <what it does>
-- <action2> - <what it does>
-- <action3> - <what it does>
+**Why users care:**
+<Explain the value/purpose from user perspective>
 
-**States:**
-- <state1>: <description>
-- <state2>: <description>
+#### Visible Attributes
 
-**Example in user language:**
-"<real-world example of how users talk about this object>"
+Information users see and care about:
+
+- **<Attribute1>**: <Why it matters to users>
+  *Example:* "<Concrete example from conversation>"
+
+- **<Attribute2>**: <Why it matters to users>
+  *Example:* "<Concrete example from conversation>"
+
+- **<Attribute3>**: <Why it matters to users>
+  *Example:* "<Concrete example from conversation>"
+
+#### Actions Users Can Perform
+
+What users can do with this object:
+
+1. **<Action1>**: <What it does>
+   - User thinks: "<Mental model of this action>"
+   - Triggers when: <Context>
+
+2. **<Action2>**: <What it does>
+   - User thinks: "<Mental model of this action>"
+   - Triggers when: <Context>
+
+3. **<Action3>**: <What it does>
+   - User thinks: "<Mental model of this action>"
+   - Triggers when: <Context>
+
+#### Object States
+
+<If the object has states, describe the lifecycle>
+
+```
+<State1> ──[action]──> <State2> ──[action]──> <State3>
+```
+
+- **<State1>**: <What this means to users>
+- **<State2>**: <What this means to users>
+- **<State3>**: <What this means to users>
+
+#### User Language Examples
+
+How users talk about this object:
+
+- "<Example phrase 1 from conversation>"
+- "<Example phrase 2 from conversation>"
+- "<Example phrase 3 from conversation>"
+
+#### Relationships
+
+<To be defined - will be mapped with /concept.add-relationship>
+
+Likely relates to:
+- <Related Object 1>
+- <Related Object 2>
 ```
 
 ### 5. Insert into Object Model Section
